@@ -179,14 +179,14 @@ void ClearCostmapRecovery::clearMap(boost::shared_ptr<costmap_2d::CostmapLayer> 
   double end_point_y = start_point_y + reset_distance_;
 
   int start_x, start_y, end_x, end_y;
-  costmap->worldToMapNoBounds(start_point_x, start_point_y, start_x, start_y);
+  costmap->worldToMapNoBounds(start_point_x, start_point_y, start_x, start_y);   // meter --> pixel
   costmap->worldToMapNoBounds(end_point_x, end_point_y, end_x, end_y);
   // 将特定栅格更新为未知信息
   costmap->clearArea(start_x, start_y, end_x, end_y, invert_area_to_clear_);
 
   double ox = costmap->getOriginX(), oy = costmap->getOriginY();
   double width = costmap->getSizeInMetersX(), height = costmap->getSizeInMetersY();
-  costmap->addExtraBounds(ox, oy, ox + width, oy + height);
+  costmap->addExtraBounds(ox, oy, ox + width, oy + height);  // 1e6
   return;
 }
 
