@@ -38,8 +38,8 @@ void CostmapLayer::clearArea(int start_x, int start_y, int end_x, int end_y, boo
 
 void CostmapLayer::addExtraBounds(double mx0, double my0, double mx1, double my1)
 {
-    extra_min_x_ = std::min(mx0, extra_min_x_);
-    extra_max_x_ = std::max(mx1, extra_max_x_);
+    extra_min_x_ = std::min(mx0, extra_min_x_); // 1e6
+    extra_max_x_ = std::max(mx1, extra_max_x_); // -1e6
     extra_min_y_ = std::min(my0, extra_min_y_);
     extra_max_y_ = std::max(my1, extra_max_y_);
     has_extra_bounds_ = true;

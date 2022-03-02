@@ -228,13 +228,14 @@ bool Costmap2D::worldToMap(double wx, double wy, unsigned int& mx, unsigned int&
   return false;
 }
 
+// 从世界坐标（wx, wy）向地图坐标(mx, my)转换,地图没有边界
 void Costmap2D::worldToMapNoBounds(double wx, double wy, int& mx, int& my) const
 {
   mx = (int)((wx - origin_x_) / resolution_);
   my = (int)((wy - origin_y_) / resolution_);
 }
 
-// 从世界坐标（wx, wy）向地图坐标(mx, my)转换,地图没有边界
+// 从世界坐标（wx, wy）向地图坐标(mx, my)转换,map中强制加入边界
 void Costmap2D::worldToMapEnforceBounds(double wx, double wy, int& mx, int& my) const
 {
   // Here we avoid doing any math to wx,wy before comparing them to
