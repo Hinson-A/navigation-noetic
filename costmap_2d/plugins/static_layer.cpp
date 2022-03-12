@@ -64,7 +64,7 @@ void StaticLayer::onInitialize()
   ros::NodeHandle nh("~/" + name_), g_nh;
   current_ = true;
 
-  // global_frame_在global_costmap时为map, local_costmap时为odom_combined
+  // global_frame_在global_costmap时为map, local_costmap时为odom_相关的话题
   global_frame_ = layered_costmap_->getGlobalFrameID();
 
   std::string map_topic;
@@ -72,17 +72,15 @@ void StaticLayer::onInitialize()
   nh.param("first_map_only", first_map_only_, false);
   nh.param("subscribe_to_updates", subscribe_to_updates_, false);
 
-  //静态地图层中没有配置，使用默认的
   nh.param("track_unknown_space", track_unknown_space_, true);
   nh.param("use_maximum", use_maximum_, false);
 
   int temp_lethal_threshold, temp_unknown_cost_value;
-  //致命cost 阈值，使用默认的为100
+  // 致命的代价阈值，默认100
   nh.param("lethal_cost_threshold", temp_lethal_threshold, int(100));
-  //未知的区域，cost 值为255
+  // 未知区域的代价值为-1
   nh.param("unknown_cost_value", temp_unknown_cost_value, int(-1));
-
- //三层的costmap??默认没有配置，为true
+  
   nh.param("trinary_costmap", trinary_costmap_, true);
 
   lethal_threshold_ = std::max(std::min(temp_lethal_threshold, 100), 0);
@@ -91,8 +89,7 @@ void StaticLayer::onInitialize()
   // Only resubscribe if topic has changed
   if (map_sub_.getTopic() != ros::names::resolve(map_topic))
   {
-    // we'll subscribe to the latched topic that the map server uses
-    // 从/map中订阅地图数据，并在回调函数中使用
+    // 从map server的发出话题中订阅地图数据
     ROS_INFO("Requesting the map...");
     map_sub_ = g_nh.subscribe(map_topic, 1, &StaticLayer::incomingMap, this);
     map_received_ = false;
@@ -177,12 +174,12 @@ unsigned char StaticLayer::interpretValue(unsigned char value)
 
 void StaticLayer::incomingMap(const nav_msgs::OccupancyGridConstPtr& new_map)
 {
-  // 从地图消息中获取地图的宽和高
+  // step 1 从地图消息中获取地图的宽和高
   unsigned int size_x = new_map->info.width, size_y = new_map->info.height;
 
   ROS_DEBUG("Received a %d X %d map at %f m/pix", size_x, size_y, new_map->info.resolution);
 
-  // 判断master costmap地图是否发生变化，如果有，改变尺寸
+  // step 2 判断master costmap地图是否发生变化，有则改变尺寸
   Costmap2D* master = layered_costmap_->getCostmap();
   if (!layered_costmap_->isRolling() &&
       (master->getSizeInCellsX() != size_x ||
