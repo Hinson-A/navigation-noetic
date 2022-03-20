@@ -59,18 +59,20 @@ void ClearCostmapRecovery::initialize(std::string name, tf2_ros::Buffer* tf,
 
     // 参数服务器中获得参数
     ros::NodeHandle private_nh("~/" + name_);
-
+  // 代价地图清除的距离　以该范围为边长　画一个正方形
+  //从地图上清除用户该区域以外的障碍物
     private_nh.param("reset_distance", reset_distance_, 3.0);
     private_nh.param("invert_area_to_clear", invert_area_to_clear_, false);
     private_nh.param("force_updating", force_updating_, false);
     private_nh.param("affected_maps", affected_maps_, std::string("both"));
+    // 地图清理的范围　local global 或者两者都包括
     if (affected_maps_ != "local" && affected_maps_ != "global" && affected_maps_ != "both")
     {
       ROS_WARN("Wrong value for affected_maps parameter: '%s'; valid values are 'local', 'global' or 'both'; " \
                "defaulting to 'both'", affected_maps_.c_str());
       affected_maps_ = "both";
     }
-
+　// 清理的地图层　默认障碍物层
     std::vector<std::string> clearable_layers_default, clearable_layers;
     clearable_layers_default.push_back( std::string("obstacles") );
     private_nh.param("layer_names", clearable_layers, clearable_layers_default);
@@ -149,6 +151,7 @@ void ClearCostmapRecovery::clear(costmap_2d::Costmap2DROS* costmap){
     // 返回该字符在字符串中的下标
     int slash = name.rfind('/');
     // 如果找到匹配的
+    // npos是一个常数，用来表示不存在的位置,string::npos代表字符串到头了结束了
     if( slash != std::string::npos ){
         name = name.substr(slash+1);
     }
@@ -163,6 +166,7 @@ void ClearCostmapRecovery::clear(costmap_2d::Costmap2DROS* costmap){
 
       boost::shared_ptr<costmap_2d::CostmapLayer> costmap;
       costmap = boost::static_pointer_cast<costmap_2d::CostmapLayer>(plugin);
+      // 重置特定层的代价地图
       clearMap(costmap, x, y);
     }
   }
@@ -173,11 +177,13 @@ void ClearCostmapRecovery::clearMap(boost::shared_ptr<costmap_2d::CostmapLayer> 
                                         double pose_x, double pose_y){
   boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getMutex()));
 
+// 以当前位置为中心　reset_distance_为边长的正方形区域
   double start_point_x = pose_x - reset_distance_ / 2;
   double start_point_y = pose_y - reset_distance_ / 2;
   double end_point_x = start_point_x + reset_distance_;
   double end_point_y = start_point_y + reset_distance_;
 
+ //从世界坐标系转换到地图坐坐标系下，地图没有边界　即像素索引
   int start_x, start_y, end_x, end_y;
   costmap->worldToMapNoBounds(start_point_x, start_point_y, start_x, start_y);   // meter --> pixel
   costmap->worldToMapNoBounds(end_point_x, end_point_y, end_x, end_y);

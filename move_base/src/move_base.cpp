@@ -94,6 +94,7 @@ namespace move_base {
 
     // 下发命令给基座
     vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+    //  发布当前的目标点　在rviz中显示
     current_goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("current_goal", 0 );
 
     ros::NodeHandle action_nh("move_base");
@@ -162,7 +163,7 @@ namespace move_base {
 
     //load any user specified recovery behaviors, and if that fails load the defaults
     if(!loadRecoveryBehaviors(private_nh)){
-      loadDefaultRecoveryBehaviors();
+      loadDefaultRec overyBehaviors();
     }
 
     //initially, we'll need to make a plan
@@ -566,6 +567,7 @@ namespace move_base {
     planner_cond_.notify_one();
   }
 
+// 全局路径规划线程
   void MoveBase::planThread(){
     ROS_DEBUG_NAMED("move_base_plan_thread","Starting planner thread...");
     ros::NodeHandle n;
@@ -594,6 +596,7 @@ namespace move_base {
       planner_plan_->clear();
       bool gotPlan = n.ok() && makePlan(temp_goal, *planner_plan_);
 
+    // 全局路径规划成功
       if(gotPlan){
         // 如果规划出路径则更新相应路径，并将state_设成CONTROLLING状态
         ROS_DEBUG_NAMED("move_base_plan_thread","Got Plan with %zu points!", planner_plan_->size());
@@ -653,6 +656,7 @@ namespace move_base {
         ros::Duration sleep_time = (start_time + ros::Duration(1.0/planner_frequency_)) - ros::Time::now();
         if (sleep_time > ros::Duration(0.0)){
           wait_for_wake = true;
+          //创建定时器　等待唤醒
           timer = n.createTimer(sleep_time, &MoveBase::wakePlanner, this);
         }
       }
@@ -681,7 +685,7 @@ namespace move_base {
     // 唤醒等待条件变量的一个线程：即调用planner_cond_.wait()的MoveBase::planThread()
     planner_cond_.notify_one();
     lock.unlock();
-
+　// 发布当前的目标点
     current_goal_pub_.publish(goal);
     // 设置局部规划频率
     ros::Rate r(controller_frequency_);
@@ -824,12 +828,15 @@ namespace move_base {
     return;
   }
 
+// 求两点间的距离
   double MoveBase::distance(const geometry_msgs::PoseStamped& p1, const geometry_msgs::PoseStamped& p2)
   {
     return hypot(p1.pose.position.x - p2.pose.position.x, p1.pose.position.y - p2.pose.position.y);
   }
 
+  // 局部规划
   bool MoveBase::executeCycle(geometry_msgs::PoseStamped& goal){
+    // 需要加锁
     boost::recursive_mutex::scoped_lock ecl(configuration_mutex_);
     // 用于发布速度命令
     geometry_msgs::Twist cmd_vel;

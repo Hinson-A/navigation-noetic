@@ -64,7 +64,7 @@ namespace move_slow_and_clear
     private_nh_.param("limited_trans_speed", limited_trans_speed_, 0.25);
     // 该修复行为时候限定的旋转速度
     private_nh_.param("limited_rot_speed", limited_rot_speed_, 0.45);
-    // limited_distance没有用到？
+    // limited_distance_*limited_distance_ 允许机器人运动的最大距离
     private_nh_.param("limited_distance", limited_distance_, 0.3);
 
     private_nh_.param("max_trans_param_name", max_trans_param_name_, std::string("max_trans_vel"));
@@ -85,13 +85,14 @@ namespace move_slow_and_clear
       return;
     }
     ROS_WARN("Move slow and clear recovery behavior started.");
+    // 获取当前位姿
     geometry_msgs::PoseStamped global_pose, local_pose;
     global_costmap_->getRobotPose(global_pose);
     local_costmap_->getRobotPose(local_pose);
 
     std::vector<geometry_msgs::Point> global_poly, local_poly;
     geometry_msgs::Point pt;
-    // 确定要清除的区域大小
+    // 确定要清除的区域大小　正方形
     for(int i = -1; i <= 1; i+=2)
     {
       pt.x = global_pose.pose.position.x + i * clearing_distance_;
@@ -112,12 +113,14 @@ namespace move_slow_and_clear
     }
 
     // 清除代价地图中特定区域
+    // 获取每一层的插件
     std::vector<boost::shared_ptr<costmap_2d::Layer> >* plugins = global_costmap_->getLayeredCostmap()->getPlugins();
     for (std::vector<boost::shared_ptr<costmap_2d::Layer> >::iterator pluginp = plugins->begin(); pluginp != plugins->end(); ++pluginp) {
             boost::shared_ptr<costmap_2d::Layer> plugin = *pluginp;
           if(plugin->getName().find("obstacles")!=std::string::npos){
             boost::shared_ptr<costmap_2d::ObstacleLayer> costmap;
             costmap = boost::static_pointer_cast<costmap_2d::ObstacleLayer>(plugin);
+            //将global_map的指定区域设置为free
             costmap->setConvexPolygonCost(global_poly, costmap_2d::FREE_SPACE);
           }
     }
@@ -128,6 +131,7 @@ namespace move_slow_and_clear
           if(plugin->getName().find("obstacles")!=std::string::npos){
             boost::shared_ptr<costmap_2d::ObstacleLayer> costmap;
             costmap = boost::static_pointer_cast<costmap_2d::ObstacleLayer>(plugin);
+            //将local_costmap的指定区域设置为free
             costmap->setConvexPolygonCost(local_poly, costmap_2d::FREE_SPACE);
           }
     }
@@ -159,6 +163,7 @@ namespace move_slow_and_clear
     distance_check_timer_ = private_nh_.createTimer(ros::Duration(0.1), &MoveSlowAndClear::distanceCheck, this);
   }
 
+// 计算当前已经移动的距离
   double MoveSlowAndClear::getSqDistance()
   {
     geometry_msgs::PoseStamped global_pose;
@@ -174,6 +179,7 @@ namespace move_slow_and_clear
 
   void MoveSlowAndClear::distanceCheck(const ros::TimerEvent& e)
   {
+    // 已行驶的距离是否超出设定的距离
     if(limited_distance_ * limited_distance_ <= getSqDistance())
     {
       ROS_INFO("Moved far enough, removing speed limit.");
@@ -192,6 +198,7 @@ namespace move_slow_and_clear
   void MoveSlowAndClear::removeSpeedLimit()
   {
     boost::mutex::scoped_lock l(mutex_);
+    // 恢复之前的速度
     setRobotSpeed(old_trans_speed_, old_rot_speed_);
     limit_set_ = false;
   }

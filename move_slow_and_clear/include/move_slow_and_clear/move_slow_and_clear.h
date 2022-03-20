@@ -62,6 +62,7 @@ namespace move_slow_and_clear
     private:
       void setRobotSpeed(double trans_speed, double rot_speed);
       void distanceCheck(const ros::TimerEvent& e);
+      // 计算当前已经移动的距离
       double getSqDistance();
 
       void removeSpeedLimit();
@@ -70,6 +71,7 @@ namespace move_slow_and_clear
       costmap_2d::Costmap2DROS* global_costmap_;
       costmap_2d::Costmap2DROS* local_costmap_;
       bool initialized_;
+      // 机器人清除范围
       double clearing_distance_, limited_distance_;
       double limited_trans_speed_, limited_rot_speed_, old_trans_speed_, old_rot_speed_;
       std::string max_trans_param_name_, max_rot_param_name_;

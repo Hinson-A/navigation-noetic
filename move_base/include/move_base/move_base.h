@@ -227,6 +227,7 @@ namespace move_base {
       // 通过这个值将goal在MoveBase::executeCb与MoveBase::planThread()之间传递
       // boost::condition_variable_any用来实现多线程同步，它必须与互斥量配合使用。
       boost::condition_variable_any planner_cond_;
+      //径规划器的目标点
       geometry_msgs::PoseStamped planner_goal_;
       boost::thread* planner_thread_;
 

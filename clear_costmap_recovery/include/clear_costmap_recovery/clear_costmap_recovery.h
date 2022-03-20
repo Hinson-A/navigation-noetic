@@ -82,6 +82,7 @@ namespace clear_costmap_recovery{
       double reset_distance_;
       bool invert_area_to_clear_;
       std::string affected_maps_; ///< clear only local, global or both costmaps
+      // 清理的地图层　默认障碍物层
       std::set<std::string> clearable_layers_; ///< Layer names which will be cleared.
   };
 };

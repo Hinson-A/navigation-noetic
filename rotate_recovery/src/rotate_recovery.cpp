@@ -109,6 +109,7 @@ void RotateRecovery::runBehavior()
   ros::NodeHandle n;
   ros::Publisher vel_pub = n.advertise<geometry_msgs::Twist>("cmd_vel", 10);
 
+//　获取当前位姿　朝向
   geometry_msgs::PoseStamped global_pose;
   local_costmap_->getRobotPose(global_pose);
 
@@ -122,6 +123,7 @@ void RotateRecovery::runBehavior()
          (!got_180 ||
           std::fabs(angles::shortest_angular_distance(current_angle, start_angle)) > tolerance_))
   {
+    //shortest_angular_distance调用了angles包，获取两角度的最小角度差
     // step 2 : while循环中更新当前角度
     local_costmap_->getRobotPose(global_pose);
     current_angle = tf2::getYaw(global_pose.pose.orientation);
@@ -155,6 +157,7 @@ void RotateRecovery::runBehavior()
       double theta = current_angle + sim_angle;
 
       // 确保这个位姿没有碰撞风险，不然会停止
+      // 获取该位姿下的代价值，若<0　则会碰撞
       double footprint_cost = world_model_->footprintCost(x, y, theta, local_costmap_->getRobotFootprint(), 0.0, 0.0);
       if (footprint_cost < 0.0)
       {
