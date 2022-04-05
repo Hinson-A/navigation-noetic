@@ -131,6 +131,10 @@ void ClearCostmapRecovery::runBehavior(){
   }
 }
 
+/*
+获取了costmap的各个地图层，在for循环中不断寻找clearable_layers_中是否有各地图层的名字，
+若有，则对其调用clearMap、进行清理。
+*/
 void ClearCostmapRecovery::clear(costmap_2d::Costmap2DROS* costmap){
   std::vector<boost::shared_ptr<costmap_2d::Layer> >* plugins = costmap->getLayeredCostmap()->getPlugins();
 
@@ -173,6 +177,10 @@ void ClearCostmapRecovery::clear(costmap_2d::Costmap2DROS* costmap){
 }
 
 
+/*
+clearMap函数就执行真正的清理工作了，保留机器人周围以reset_distance_为边长的矩形区域，
+将其余区域的cell都设置为未知。
+*/
 void ClearCostmapRecovery::clearMap(boost::shared_ptr<costmap_2d::CostmapLayer> costmap,
                                         double pose_x, double pose_y){
   boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getMutex()));

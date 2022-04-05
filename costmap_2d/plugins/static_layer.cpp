@@ -68,10 +68,11 @@ void StaticLayer::onInitialize()
   global_frame_ = layered_costmap_->getGlobalFrameID();
 
   std::string map_topic;
+  // 订阅map的topic，默认map
   nh.param("map_topic", map_topic, std::string("map"));
   nh.param("first_map_only", first_map_only_, false);
   nh.param("subscribe_to_updates", subscribe_to_updates_, false);
-
+//是否规划未知区域， true将未知区域设置为NO_INFORMATION，false: 设置为free可通行区域
   nh.param("track_unknown_space", track_unknown_space_, true);
   nh.param("use_maximum", use_maximum_, false);
 
@@ -80,7 +81,7 @@ void StaticLayer::onInitialize()
   nh.param("lethal_cost_threshold", temp_lethal_threshold, int(100));
   // 未知区域的代价值为-1
   nh.param("unknown_cost_value", temp_unknown_cost_value, int(-1));
-  
+  //? ?
   nh.param("trinary_costmap", trinary_costmap_, true);
 
   lethal_threshold_ = std::max(std::min(temp_lethal_threshold, 100), 0);
@@ -172,6 +173,7 @@ unsigned char StaticLayer::interpretValue(unsigned char value)
   return scale * LETHAL_OBSTACLE;
 }
 
+// 地图数据的回调函数
 void StaticLayer::incomingMap(const nav_msgs::OccupancyGridConstPtr& new_map)
 {
   // step 1 从地图消息中获取地图的宽和高
