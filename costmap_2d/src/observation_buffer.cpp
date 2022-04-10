@@ -60,12 +60,14 @@ ObservationBuffer::~ObservationBuffer()
 {
 }
 
+// 将原点和传感器数据转换到新的坐标系下
 bool ObservationBuffer::setGlobalFrame(const std::string new_global_frame)
 {
   ros::Time transform_time = ros::Time::now();
   std::string tf_error;
 
   geometry_msgs::TransformStamped transformStamped;
+  //新旧坐标系转换
   if (!tf2_buffer_.canTransform(new_global_frame, global_frame_, transform_time, ros::Duration(tf_tolerance_), &tf_error))
   {
     ROS_ERROR("Transform between %s and %s with tolerance %.2f failed: %s.", new_global_frame.c_str(),
@@ -86,10 +88,12 @@ bool ObservationBuffer::setGlobalFrame(const std::string new_global_frame)
       origin.point = obs.origin_;
 
       // we need to transform the origin of the observation to the new global frame
+      // 将原点转换到新的全局坐标系下
       tf2_buffer_.transform(origin, origin, new_global_frame);
       obs.origin_ = origin.point;
 
       // we also need to transform the cloud of the observation to the new global frame
+      // 将传感器数据转换到新的坐标系上
       tf2_buffer_.transform(*(obs.cloud_), *(obs.cloud_), new_global_frame);
     }
     catch (TransformException& ex)
@@ -105,26 +109,33 @@ bool ObservationBuffer::setGlobalFrame(const std::string new_global_frame)
   return true;
 }
 
+//点云数据缓冲处理
+// 由局部坐标系转换到全局坐标系下，过滤制定高度数据
 void ObservationBuffer::bufferCloud(const sensor_msgs::PointCloud2& cloud)
 {
   geometry_msgs::PointStamped global_origin;
 
   // create a new observation on the list to be populated
+  //在list的开头再添加一个新的observation
   observation_list_.push_front(Observation());
 
   // check whether the origin frame has been set explicitly or whether we should get it from the cloud
+  // 如果初始未设置sensor_frame_，则采用点云中的frame
   string origin_frame = sensor_frame_ == "" ? cloud.header.frame_id : sensor_frame_;
 
   try
   {
     // given these observations come from sensors... we'll need to store the origin pt of the sensor
+    // 传感器的数据原点需要转换到全局坐标系中
     geometry_msgs::PointStamped local_origin;
     local_origin.header.stamp = cloud.header.stamp;
     local_origin.header.frame_id = origin_frame;
     local_origin.point.x = 0;
     local_origin.point.y = 0;
     local_origin.point.z = 0;
+    //将原点转换到全局坐标系下
     tf2_buffer_.transform(local_origin, global_origin, global_frame_);
+    //将得到在全局坐标系下的传感器原点数据转换到observation_list_中
     tf2::convert(global_origin.point, observation_list_.front().origin_);
 
     // make sure to pass on the raytrace/obstacle range of the observation buffer to the observations
@@ -133,6 +144,7 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::PointCloud2& cloud)
 
     sensor_msgs::PointCloud2 global_frame_cloud;
 
+    // 将点云数据也转换到全局坐标系下
     // transform the point cloud
     tf2_buffer_.transform(cloud, global_frame_cloud, global_frame_);
     global_frame_cloud.header.stamp = cloud.header.stamp;
@@ -148,11 +160,13 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::PointCloud2& cloud)
     observation_cloud.is_dense = global_frame_cloud.is_dense;
 
     unsigned int cloud_size = global_frame_cloud.height*global_frame_cloud.width;
+    // PointCloud2Modifier修改点云数据
     sensor_msgs::PointCloud2Modifier modifier(observation_cloud);
     modifier.resize(cloud_size);
     unsigned int point_count = 0;
 
     // copy over the points that are within our height bounds
+    // 拷贝特定高度范围的点云数据
     sensor_msgs::PointCloud2Iterator<float> iter_z(global_frame_cloud, "z");
     std::vector<unsigned char>::const_iterator iter_global = global_frame_cloud.data.begin(), iter_global_end = global_frame_cloud.data.end();
     std::vector<unsigned char>::iterator iter_obs = observation_cloud.data.begin();
@@ -188,6 +202,7 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::PointCloud2& cloud)
   purgeStaleObservations();
 }
 
+// 获取传感器观测数据的拷贝
 // returns a copy of the observations
 void ObservationBuffer::getObservations(vector<Observation>& observations)
 {
@@ -202,8 +217,10 @@ void ObservationBuffer::getObservations(vector<Observation>& observations)
   }
 }
 
+// 清除掉超出时间的数据
 void ObservationBuffer::purgeStaleObservations()
 {
+  // 将超出设置的数据保持时间observation_keep_time_的缓存数据清理掉
   if (!observation_list_.empty())
   {
     list<Observation>::iterator obs_it = observation_list_.begin();
@@ -228,6 +245,7 @@ void ObservationBuffer::purgeStaleObservations()
   }
 }
 
+// 判断传感器数据更新频率是否满足设置阈值
 bool ObservationBuffer::isCurrent() const
 {
   if (expected_update_rate_ == ros::Duration(0.0))
@@ -243,6 +261,7 @@ bool ObservationBuffer::isCurrent() const
   return current;
 }
 
+// 重置更新时间为当前时间
 void ObservationBuffer::resetLastUpdated()
 {
   last_updated_ = ros::Time::now();

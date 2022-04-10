@@ -163,7 +163,7 @@ namespace move_base {
 
     //load any user specified recovery behaviors, and if that fails load the defaults
     if(!loadRecoveryBehaviors(private_nh)){
-      loadDefaultRec overyBehaviors();
+      loadDefaultRecoveryBehaviors();
     }
 
     //initially, we'll need to make a plan
@@ -685,7 +685,7 @@ namespace move_base {
     // 唤醒等待条件变量的一个线程：即调用planner_cond_.wait()的MoveBase::planThread()
     planner_cond_.notify_one();
     lock.unlock();
-　// 发布当前的目标点
+    // 发布当前的目标点
     current_goal_pub_.publish(goal);
     // 设置局部规划频率
     ros::Rate r(controller_frequency_);

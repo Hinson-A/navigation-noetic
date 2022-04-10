@@ -248,6 +248,7 @@ void ObstacleLayer::reconfigureCB(costmap_2d::ObstaclePluginConfig &config, uint
   combination_method_ = config.combination_method;
 }
 
+// 处理激光数据的回调函数
 void ObstacleLayer::laserScanCallback(const sensor_msgs::LaserScanConstPtr& message,
                                       const boost::shared_ptr<ObservationBuffer>& buffer)
 {
@@ -278,6 +279,7 @@ void ObstacleLayer::laserScanCallback(const sensor_msgs::LaserScanConstPtr& mess
   buffer->unlock();
 }
 
+// 处理激光数据的回调函数(inf作为有效值)
 void ObstacleLayer::laserScanValidInfCallback(const sensor_msgs::LaserScanConstPtr& raw_message,
                                               const boost::shared_ptr<ObservationBuffer>& buffer)
 {
@@ -322,6 +324,7 @@ void ObstacleLayer::laserScanValidInfCallback(const sensor_msgs::LaserScanConstP
 }
 
 // 处理缓冲点云pointcloud消息的回调函数
+// 将pointcloud类型转换成pointcloud2
 void ObstacleLayer::pointCloudCallback(const sensor_msgs::PointCloudConstPtr& message,
                                                const boost::shared_ptr<ObservationBuffer>& buffer)
 {
@@ -344,6 +347,7 @@ void ObstacleLayer::pointCloud2Callback(const sensor_msgs::PointCloud2ConstPtr& 
                                                 const boost::shared_ptr<ObservationBuffer>& buffer)
 {
   // buffer the point cloud
+  // 将该类型的数据直接存储到buffer中
   buffer->lock();
   buffer->bufferCloud(*message);
   buffer->unlock();
@@ -453,6 +457,7 @@ void ObstacleLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, i
     setConvexPolygonCost(transformed_footprint_, costmap_2d::FREE_SPACE);
   }
   // 更新master_grid的方法
+  // ?覆盖式更新和最大值更新
   switch (combination_method_)
   {
     case 0:  // Overwrite
@@ -522,6 +527,7 @@ bool ObstacleLayer::getClearingObservations(std::vector<Observation>& clearing_o
   return current;
 }
 
+  //!  光线跟踪自由空间
 void ObstacleLayer::raytraceFreespace(const Observation& clearing_observation, double* min_x, double* min_y,
                                               double* max_x, double* max_y)
 {

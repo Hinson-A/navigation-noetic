@@ -44,6 +44,10 @@
 
 using std::vector;
 
+/*
+该类来跟踪每一个层。每层使用pluginlib（ROS插件机制）来实例化并添加到LayeredCostmap类的对象中。
+各个层可以被独立的编译，且允许使用C++接口对costmap做出任意的改变。
+*/
 namespace costmap_2d
 {
 

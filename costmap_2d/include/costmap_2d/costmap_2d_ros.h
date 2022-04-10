@@ -50,6 +50,7 @@
 #include <pluginlib/class_loader.hpp>
 #include <tf2/LinearMath/Transform.h>
 
+// XML数据获取类
 class SuperValue : public XmlRpc::XmlRpcValue
 {
 public:
@@ -68,6 +69,10 @@ public:
 namespace costmap_2d
 {
 
+/*
+costmap_2d::Costmap2DROS是ROS对costmap的封装类。具体的地图信息是储存在各个Layer中。
+该类负责与其他ROS模块交互，发布和订阅一些内容
+*/
 /** @brief A ROS wrapper for a 2D Costmap. Handles subscribing to
  * topics that provide observations about obstacles in either the form
  * of PointCloud or LaserScan messages. */

@@ -72,7 +72,7 @@ void ClearCostmapRecovery::initialize(std::string name, tf2_ros::Buffer* tf,
                "defaulting to 'both'", affected_maps_.c_str());
       affected_maps_ = "both";
     }
-　// 清理的地图层　默认障碍物层
+    // 清理的地图层　默认障碍物层
     std::vector<std::string> clearable_layers_default, clearable_layers;
     clearable_layers_default.push_back( std::string("obstacles") );
     private_nh.param("layer_names", clearable_layers, clearable_layers_default);

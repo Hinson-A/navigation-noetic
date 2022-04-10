@@ -50,6 +50,7 @@ using namespace std;
 namespace costmap_2d
 {
 
+//? 
 void move_parameter(ros::NodeHandle& old_h, ros::NodeHandle& new_h, std::string name, bool should_delete = true)
 {
   if (!old_h.hasParam(name))
@@ -61,6 +62,9 @@ void move_parameter(ros::NodeHandle& old_h, ros::NodeHandle& new_h, std::string 
   if (should_delete) old_h.deleteParam(name);
 }
 
+/*
+*构造函数
+*/
 Costmap2DROS::Costmap2DROS(const std::string& name, tf2_ros::Buffer& tf) :
     layered_costmap_(NULL),
     name_(name),

@@ -106,6 +106,7 @@ public:
 
   /**
    * @brief  Check if the observation buffer is being update at its expected rate
+   * 判断传感器数据更新频率是否满足设置阈值
    * @return True if it is being updated at the expected rate, false otherwise
    */
   bool isCurrent() const;
@@ -134,6 +135,7 @@ public:
 private:
   /**
    * @brief  Removes any stale observations from the buffer list
+   * 清除掉超出时间的数据
    */
   void purgeStaleObservations();
 

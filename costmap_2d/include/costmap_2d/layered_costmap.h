@@ -151,23 +151,28 @@ public:
    * robot which is just within all points and edges of the robot's
    * footprint.
    *
+   * 内切圆半径
    * This is updated by setFootprint(). */
   double getInscribedRadius() { return inscribed_radius_; }
 
 private:
   Costmap2D costmap_;
+  // 全局坐标系名称
   std::string global_frame_;
-
+// 是否滑动窗口
+//true 当机器人在移动时，将机器人保持在代价地图的中心,
+//常用于里程计坐标系中，机器人只关注局部区域内的障碍物
   bool rolling_window_;  /// < @brief Whether or not the costmap should roll with the robot
-
+// 更新频率是否满足阈值要求
   bool current_;
   double minx_, miny_, maxx_, maxy_;
   unsigned int bx0_, bxn_, by0_, byn_;
-
+// 各层代价地图插件集合
   std::vector<boost::shared_ptr<Layer> > plugins_;
 
   bool initialized_;
   bool size_locked_;
+  // 外接和内切圆半径
   double circumscribed_radius_, inscribed_radius_;
   std::vector<geometry_msgs::Point> footprint_;
 };
