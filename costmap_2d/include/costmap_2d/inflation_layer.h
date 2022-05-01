@@ -38,21 +38,19 @@
 #ifndef COSTMAP_2D_INFLATION_LAYER_H_
 #define COSTMAP_2D_INFLATION_LAYER_H_
 
-#include <ros/ros.h>
+#include <boost/thread.hpp>
+#include <costmap_2d/InflationPluginConfig.h>
 #include <costmap_2d/layer.h>
 #include <costmap_2d/layered_costmap.h>
-#include <costmap_2d/InflationPluginConfig.h>
 #include <dynamic_reconfigure/server.h>
-#include <boost/thread.hpp>
+#include <ros/ros.h>
 
-namespace costmap_2d
-{
+namespace costmap_2d {
 /**
  * @class CellData
  * @brief Storage for cell information used during obstacle inflation
  */
-class CellData
-{
+class CellData {
 public:
   /**
    * @brief  Constructor for a CellData objects
@@ -63,59 +61,60 @@ public:
    * @param  sy The y coordinate of the closest obstacle cell in the costmap
    * @return
    */
-  CellData(double i, unsigned int x, unsigned int y, unsigned int sx, unsigned int sy) :
-      index_(i), x_(x), y_(y), src_x_(sx), src_y_(sy)
-  {
-  }
+  CellData(double i, unsigned int x, unsigned int y, unsigned int sx,
+           unsigned int sy)
+      : index_(i), x_(x), y_(y), src_x_(sx), src_y_(sy) {}
+  // this cell 在map的一维索引
   unsigned int index_;
+  // this cell 在map的x,y二维索引
   unsigned int x_, y_;
+  // this cell距离最近的障碍物点，这个障碍物cell的xy二维索引
   unsigned int src_x_, src_y_;
 };
 
-class InflationLayer : public Layer
-{
+class InflationLayer : public Layer {
 public:
   InflationLayer();
 
-  virtual ~InflationLayer()
-  {
+  virtual ~InflationLayer() {
     deleteKernels();
     if (dsrv_)
-        delete dsrv_;
+      delete dsrv_;
     if (seen_)
-        delete[] seen_;
+      delete[] seen_;
   }
 
   virtual void onInitialize();
-  virtual void updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x, double* min_y,
-                            double* max_x, double* max_y);
-  virtual void updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
-  virtual bool isDiscretized()
-  {
-    return true;
-  }
+  virtual void updateBounds(double robot_x, double robot_y, double robot_yaw,
+                            double *min_x, double *min_y, double *max_x,
+                            double *max_y);
+  virtual void updateCosts(costmap_2d::Costmap2D &master_grid, int min_i,
+                           int min_j, int max_i, int max_j);
+  virtual bool isDiscretized() { return true; }
   virtual void matchSize();
 
   virtual void reset() { onInitialize(); }
 
   /** @brief  根据距离计算代价，大概分三个情况:
-   * 1. 如果distance为0，即(0,0)点，则设置cached_costs_上的值为LETHAL_OBSTACLE(254)，表示为障碍物本身；
-   * 2. 如果distance ≤ 机器人足迹内切圆半径，设置值为INSCRIBED_INFLATED_OBSTACLE（253），即由于机器人有体积造成的障碍物膨胀；
-   * 3. 如果机器人足迹内切圆半径 < distance ≤ cell_inflation_radius_，则以距离远近为比例（指数型）设置值。
+   * 1.
+   * 如果distance为0，即(0,0)点，则设置cached_costs_上的值为LETHAL_OBSTACLE(254)，表示为障碍物本身；
+   * 2. 如果distance ≤
+   * 机器人足迹内切圆半径，设置值为INSCRIBED_INFLATED_OBSTACLE（253），即由于机器人有体积造成的障碍物膨胀；
+   * 3. 如果机器人足迹内切圆半径 < distance ≤
+   * cell_inflation_radius_，则以距离远近为比例（指数型）设置值。
    * @param  distance 障碍物单元格的距离
    * @return 对于这个距离的代价值 */
-  virtual inline unsigned char computeCost(double distance) const
-  {
+  virtual inline unsigned char computeCost(double distance) const {
     unsigned char cost = 0;
     if (distance == 0)
       cost = LETHAL_OBSTACLE;
     else if (distance * resolution_ <= inscribed_radius_)
       cost = INSCRIBED_INFLATED_OBSTACLE;
-    else
-    {
+    else {
       // make sure cost falls off by Euclidean distance
       double euclidean_distance = distance * resolution_;
-      double factor = exp(-1.0 * weight_ * (euclidean_distance - inscribed_radius_));
+      double factor =
+          exp(-1.0 * weight_ * (euclidean_distance - inscribed_radius_));
       cost = (unsigned char)((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
     }
     return cost;
@@ -126,11 +125,12 @@ public:
    * @param inflation_radius The new inflation radius
    * @param cost_scaling_factor The new weight
    */
-  void setInflationParameters(double inflation_radius, double cost_scaling_factor);
+  void setInflationParameters(double inflation_radius,
+                              double cost_scaling_factor);
 
 protected:
   virtual void onFootprintChanged();
-  boost::recursive_mutex* inflation_access_;
+  boost::recursive_mutex *inflation_access_;
 
   double resolution_;
   double inflation_radius_;
@@ -147,8 +147,7 @@ private:
    * @param src_y The y coordinate of the source cell
    * @return
    */
-  inline double distanceLookup(int mx, int my, int src_x, int src_y)
-  {
+  inline double distanceLookup(int mx, int my, int src_x, int src_y) {
     unsigned int dx = abs(mx - src_x);
     unsigned int dy = abs(my - src_y);
     return cached_distances_[dx][dy];
@@ -162,8 +161,7 @@ private:
    * @param src_y The y coordinate of the source cell
    * @return
    */
-  inline unsigned char costLookup(int mx, int my, int src_x, int src_y)
-  {
+  inline unsigned char costLookup(int mx, int my, int src_x, int src_y) {
     unsigned int dx = abs(mx - src_x);
     unsigned int dy = abs(my - src_y);
     return cached_costs_[dx][dy];
@@ -171,10 +169,10 @@ private:
 
   void computeCaches();
   void deleteKernels();
-  void inflate_area(int min_i, int min_j, int max_i, int max_j, unsigned char* master_grid);
+  void inflate_area(int min_i, int min_j, int max_i, int max_j,
+                    unsigned char *master_grid);
 
-  unsigned int cellDistance(double world_dist)
-  {
+  unsigned int cellDistance(double world_dist) {
     return layered_costmap_->getCostmap()->cellDistance(world_dist);
   }
 
@@ -183,21 +181,22 @@ private:
 
   unsigned int cell_inflation_radius_;
   unsigned int cached_cell_inflation_radius_;
-  std::map<double, std::vector<CellData> > inflation_cells_;
+  std::map<double, std::vector<CellData>> inflation_cells_;
 
-  bool* seen_;
+  bool *seen_;
   int seen_size_;
 
-  unsigned char** cached_costs_;
-  double** cached_distances_;
+  unsigned char **cached_costs_;
+  double **cached_distances_;
   double last_min_x_, last_min_y_, last_max_x_, last_max_y_;
 
   dynamic_reconfigure::Server<costmap_2d::InflationPluginConfig> *dsrv_;
   void reconfigureCB(costmap_2d::InflationPluginConfig &config, uint32_t level);
 
-  bool need_reinflation_;  ///< Indicates that the entire costmap should be reinflated next time around.
+  bool need_reinflation_; ///< Indicates that the entire costmap should be
+                          ///< reinflated next time around.
 };
 
-}  // namespace costmap_2d
+} // namespace costmap_2d
 
-#endif  // COSTMAP_2D_INFLATION_LAYER_H_
+#endif // COSTMAP_2D_INFLATION_LAYER_H_

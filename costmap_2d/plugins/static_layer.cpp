@@ -81,7 +81,7 @@ void StaticLayer::onInitialize()
   nh.param("lethal_cost_threshold", temp_lethal_threshold, int(100));
   // 未知区域的代价值为-1
   nh.param("unknown_cost_value", temp_unknown_cost_value, int(-1));
-  //? ?
+  //?:  该参数的意义？
   nh.param("trinary_costmap", trinary_costmap_, true);
 
   lethal_threshold_ = std::max(std::min(temp_lethal_threshold, 100), 0);

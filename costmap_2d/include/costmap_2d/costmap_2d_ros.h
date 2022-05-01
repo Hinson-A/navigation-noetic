@@ -278,6 +278,7 @@ private:
 
   ros::Subscriber footprint_sub_;
   ros::Publisher footprint_pub_;
+  //?: unpadded_footprint_这两个的区别　未填补？　填补？
   std::vector<geometry_msgs::Point> unpadded_footprint_;
   std::vector<geometry_msgs::Point> padded_footprint_;
   float footprint_padding_;

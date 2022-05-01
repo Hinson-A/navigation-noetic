@@ -50,7 +50,7 @@ using namespace std;
 namespace costmap_2d
 {
 
-//? 
+//?:  该函数的目的是获参数，是从XML文件中获取的？
 void move_parameter(ros::NodeHandle& old_h, ros::NodeHandle& new_h, std::string name, bool should_delete = true)
 {
   if (!old_h.hasParam(name))
@@ -118,8 +118,10 @@ Costmap2DROS::Costmap2DROS(const std::string& name, tf2_ros::Buffer& tf) :
 
   layered_costmap_ = new LayeredCostmap(global_frame_, rolling_window, track_unknown_space);
 
+//LCL 如果配置文件中没有设置插件，则下载老的参数
   if (!private_nh.hasParam("plugins"))
   {
+    //?: 这是从XML文件中获取？
     loadOldParameters(private_nh);
   } else {
     warnForOldParameters(private_nh);
@@ -181,6 +183,7 @@ Costmap2DROS::Costmap2DROS(const std::string& name, tf2_ros::Buffer& tf) :
   dsrv_->setCallback(cb);
 }
 
+// 设置机器人footprint
 void Costmap2DROS::setUnpaddedRobotFootprintPolygon(const geometry_msgs::Polygon& footprint)
 {
   setUnpaddedRobotFootprint(toPointVector(footprint));

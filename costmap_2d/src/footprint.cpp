@@ -93,6 +93,7 @@ geometry_msgs::Polygon toPolygon(std::vector<geometry_msgs::Point> pts)
   return polygon;
 }
 
+// footprint的数据类型由Polygon转换成Point
 std::vector<geometry_msgs::Point> toPointVector(geometry_msgs::Polygon polygon)
 {
   std::vector<geometry_msgs::Point> pts;
@@ -135,6 +136,7 @@ void transformFootprint(double x, double y, double theta, const std::vector<geom
   }
 }
 
+//footprint填充
 void padFootprint(std::vector<geometry_msgs::Point>& footprint, double padding)
 {
   // pad footprint in place
